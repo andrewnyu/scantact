@@ -8,7 +8,6 @@ const PHONE_LABELS = ['Mobile', 'Work', 'Home', 'Other'];
 
 export default function App() {
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [phones, setPhones] = useState([{ number: '', label: 'Mobile' }]);
   const [showQR, setShowQR] = useState(false);
   const [showLabelModal, setShowLabelModal] = useState(false);
@@ -76,7 +75,6 @@ export default function App() {
   const generateVCard = () => {
     let vCard = 'BEGIN:VCARD\nVERSION:3.0\n';
     vCard += `FN:${name}\n`;
-    vCard += `EMAIL:${email}\n`;
     
     // Add all phone numbers with labels
     phones.forEach((phone, index) => {
@@ -98,6 +96,9 @@ export default function App() {
     additionalFields.forEach(field => {
       if (field.value.trim()) {
         switch (field.type) {
+          case 'email':
+            vCard += `EMAIL:${field.value}\n`;
+            break;
           case 'company':
             vCard += `ORG:${field.value}\n`;
             break;
@@ -109,9 +110,6 @@ export default function App() {
             break;
           case 'address':
             vCard += `ADR:;;${field.value};;;;\n`;
-            break;
-          case 'email':
-            vCard += `EMAIL;TYPE=WORK:${field.value}\n`;
             break;
           case 'phone':
             vCard += `TEL;TYPE=WORK:${field.value}\n`;
@@ -128,7 +126,7 @@ export default function App() {
   };
 
   const vCard = generateVCard();
-  const isFormValid = name.trim() && email.trim() && phones.some(phone => phone.number.trim());
+  const isFormValid = name.trim() && phones.some(phone => phone.number.trim());
 
   const renderPhoneInput = (phone, index) => (
     <View key={index} style={styles.inputGroup}>
@@ -195,6 +193,36 @@ export default function App() {
     </View>
   );
 
+  // QR Display Screen
+  if (showQR) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Your QR Code</Text>
+          <Text style={styles.subtitle}>Scan to add contact</Text>
+        </View>
+        
+        <View style={styles.qrCard}>
+          <View style={styles.qrContainer}>
+            <QRCode value={vCard} size={280} />
+          </View>
+          <Text style={styles.qrSubtitle}>Scan this code to add contact to your phone</Text>
+        </View>
+        
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => setShowQR(false)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.editButtonText}>Edit Contact</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  // Edit Form Screen
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -213,19 +241,6 @@ export default function App() {
               placeholder="Enter your full name"
               value={name}
               onChangeText={setName}
-              placeholderTextColor="#9E9E9E"
-            />
-          </View>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email Address *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
               placeholderTextColor="#9E9E9E"
             />
           </View>
@@ -250,6 +265,13 @@ export default function App() {
           <View style={styles.addFieldsContainer}>
             <Text style={styles.addFieldsTitle}>Add More Fields</Text>
             <View style={styles.addFieldsGrid}>
+              <TouchableOpacity
+                style={styles.addFieldButton}
+                onPress={() => addAdditionalField('email')}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.addFieldButtonText}>Email</Text>
+              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.addFieldButton}
                 onPress={() => addAdditionalField('company')}
@@ -280,13 +302,6 @@ export default function App() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.addFieldButton}
-                onPress={() => addAdditionalField('email')}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.addFieldButtonText}>Email</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.addFieldButton}
                 onPress={() => addAdditionalField('phone')}
                 activeOpacity={0.8}
               >
@@ -313,16 +328,6 @@ export default function App() {
             Generate QR Code
           </Text>
         </TouchableOpacity>
-        
-        {showQR && (
-          <View style={styles.qrCard}>
-            <Text style={styles.qrTitle}>Your Contact QR Code</Text>
-            <Text style={styles.qrSubtitle}>Scan this code to add contact to your phone</Text>
-            <View style={styles.qrContainer}>
-              <QRCode value={vCard} size={240} />
-            </View>
-          </View>
-        )}
         
         <View style={styles.bottomSpacing} />
       </ScrollView>
@@ -476,7 +481,7 @@ const styles = StyleSheet.create({
     minWidth: 80,
   },
   labelButtonText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '500',
     color: '#424242',
     flex: 1,
@@ -602,16 +607,10 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  qrTitle: {
-    fontSize: 20,
-    fontWeight: '500',
-    color: '#212121',
-    marginBottom: 4,
-  },
   qrSubtitle: {
     fontSize: 14,
     color: '#757575',
-    marginBottom: 24,
+    marginTop: 16,
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -627,6 +626,24 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+  },
+  buttonContainer: {
+    paddingHorizontal: 16,
+    marginTop: 16,
+  },
+  editButton: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  editButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#424242',
+    letterSpacing: 0.5,
   },
   bottomSpacing: {
     height: 40,
