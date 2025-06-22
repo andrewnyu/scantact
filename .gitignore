@@ -56,6 +56,7 @@ android/.idea/
 android/*.iml
 android/app/release/
 android/app/debug/
+android/app/debug.keystore
 
 # iOS
 ios/build/
