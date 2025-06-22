@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, Button, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Dimensions } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
+
+const { width } = Dimensions.get('window');
 
 export default function App() {
   const [name, setName] = useState('');
@@ -28,76 +30,130 @@ export default function App() {
   };
 
   const vCard = generateVCard();
+  const isFormValid = name.trim() && email.trim() && phone.trim();
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Scantact</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>Scantact</Text>
+          <Text style={styles.subtitle}>Generate QR codes for your contact information</Text>
+        </View>
         
-        <Text style={styles.sectionTitle}>Required Fields</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Name *"
-          value={name}
-          onChangeText={setName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Email *"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Phone *"
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="phone-pad"
-        />
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Required Information</Text>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Full Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your full name"
+              value={name}
+              onChangeText={setName}
+              placeholderTextColor="#9E9E9E"
+            />
+          </View>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Email Address</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              placeholderTextColor="#9E9E9E"
+            />
+          </View>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Phone Number</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your phone number"
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              placeholderTextColor="#9E9E9E"
+            />
+          </View>
+        </View>
 
-        <Text style={styles.sectionTitle}>Optional Fields</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Company"
-          value={company}
-          onChangeText={setCompany}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Job Title"
-          value={jobTitle}
-          onChangeText={setJobTitle}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Website"
-          value={website}
-          onChangeText={setWebsite}
-          keyboardType="url"
-          autoCapitalize="none"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Address"
-          value={address}
-          onChangeText={setAddress}
-          multiline
-        />
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Additional Information</Text>
+          <Text style={styles.sectionSubtitle}>Optional fields to enhance your contact card</Text>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Company</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your company name"
+              value={company}
+              onChangeText={setCompany}
+              placeholderTextColor="#9E9E9E"
+            />
+          </View>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Job Title</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your job title"
+              value={jobTitle}
+              onChangeText={setJobTitle}
+              placeholderTextColor="#9E9E9E"
+            />
+          </View>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Website</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your website URL"
+              value={website}
+              onChangeText={setWebsite}
+              keyboardType="url"
+              autoCapitalize="none"
+              placeholderTextColor="#9E9E9E"
+            />
+          </View>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Address</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Enter your address"
+              value={address}
+              onChangeText={setAddress}
+              multiline
+              numberOfLines={3}
+              placeholderTextColor="#9E9E9E"
+            />
+          </View>
+        </View>
 
-        <Button
-          title="Generate QR Code"
+        <TouchableOpacity
+          style={[styles.generateButton, !isFormValid && styles.generateButtonDisabled]}
           onPress={() => setShowQR(true)}
-          disabled={!name || !email || !phone}
-        />
+          disabled={!isFormValid}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.generateButtonText, !isFormValid && styles.generateButtonTextDisabled]}>
+            Generate QR Code
+          </Text>
+        </TouchableOpacity>
         
         {showQR && (
-          <View style={styles.qrContainer}>
-            <QRCode value={vCard} size={220} />
-            <Text style={styles.qrText}>Scan to add contact</Text>
+          <View style={styles.qrCard}>
+            <Text style={styles.qrTitle}>Your Contact QR Code</Text>
+            <Text style={styles.qrSubtitle}>Scan this code to add contact to your phone</Text>
+            <View style={styles.qrContainer}>
+              <QRCode value={vCard} size={240} />
+            </View>
           </View>
         )}
+        
+        <View style={styles.bottomSpacing} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -106,42 +162,154 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FAFAFA',
   },
   scrollView: {
     flex: 1,
-    padding: 20,
+  },
+  header: {
+    paddingTop: 60,
+    paddingBottom: 32,
+    paddingHorizontal: 24,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 24,
+    fontWeight: '300',
+    color: '#212121',
+    marginBottom: 8,
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#757575',
     textAlign: 'center',
+    lineHeight: 22,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 12,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 16,
+    fontSize: 20,
+    fontWeight: '500',
+    color: '#212121',
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#757575',
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#424242',
     marginBottom: 8,
-    color: '#333',
   },
   input: {
-    width: '100%',
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#E0E0E0',
     borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     fontSize: 16,
+    color: '#212121',
+    backgroundColor: '#FFFFFF',
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
+  },
+  generateButton: {
+    backgroundColor: '#1976D2',
+    marginHorizontal: 16,
+    marginVertical: 16,
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    shadowColor: '#1976D2',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  generateButtonDisabled: {
+    backgroundColor: '#E0E0E0',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  generateButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  generateButtonTextDisabled: {
+    color: '#9E9E9E',
+  },
+  qrCard: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  qrTitle: {
+    fontSize: 20,
+    fontWeight: '500',
+    color: '#212121',
+    marginBottom: 4,
+  },
+  qrSubtitle: {
+    fontSize: 14,
+    color: '#757575',
+    marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   qrContainer: {
-    marginTop: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  qrText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#666',
+  bottomSpacing: {
+    height: 40,
   },
 });
