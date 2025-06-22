@@ -14,6 +14,10 @@ export default function App() {
   const [selectedPhoneIndex, setSelectedPhoneIndex] = useState(0);
   const [customLabel, setCustomLabel] = useState('');
   
+  // QR screen customization
+  const [qrTitle, setQrTitle] = useState('Your QR Code');
+  const [qrSubtitle, setQrSubtitle] = useState('Scan to add contact');
+  
   // Additional fields state
   const [additionalFields, setAdditionalFields] = useState([]);
 
@@ -198,8 +202,8 @@ export default function App() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>Your QR Code</Text>
-          <Text style={styles.subtitle}>Scan to add contact</Text>
+          <Text style={styles.title}>{qrTitle}</Text>
+          <Text style={styles.subtitle}>{qrSubtitle}</Text>
         </View>
         
         <View style={styles.qrCard}>
@@ -215,7 +219,7 @@ export default function App() {
             onPress={() => setShowQR(false)}
             activeOpacity={0.8}
           >
-            <Text style={styles.editButtonText}>Edit Contact</Text>
+            <Text style={styles.editButtonText}>Edit QR</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -315,6 +319,33 @@ export default function App() {
                 <Text style={styles.addFieldButtonText}>Note</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>QR Display Customization</Text>
+          <Text style={styles.sectionSubtitle}>Customize how your QR code screen appears</Text>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>QR Screen Title</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter custom title (e.g., Your QR Code)"
+              value={qrTitle}
+              onChangeText={setQrTitle}
+              placeholderTextColor="#9E9E9E"
+            />
+          </View>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>QR Screen Subtitle</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter custom subtitle (e.g., Scan to add contact)"
+              value={qrSubtitle}
+              onChangeText={setQrSubtitle}
+              placeholderTextColor="#9E9E9E"
+            />
           </View>
         </View>
 
@@ -633,17 +664,18 @@ const styles = StyleSheet.create({
   },
   editButton: {
     backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    paddingVertical: 16,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E0E0E0',
+    alignSelf: 'center',
   },
   editButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#424242',
-    letterSpacing: 0.5,
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#757575',
   },
   bottomSpacing: {
     height: 40,
