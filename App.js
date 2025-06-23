@@ -1,10 +1,17 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Dimensions, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Dimensions, Modal, Alert } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
 const PHONE_LABELS = ['Mobile', 'Work', 'Home', 'Other'];
+
+// Storage keys
+const STORAGE_KEYS = {
+  CONTACT_DATA: 'scantact_contact_data',
+  QR_CUSTOMIZATION: 'scantact_qr_customization'
+};
 
 export default function App() {
   const [name, setName] = useState('');
@@ -20,6 +27,77 @@ export default function App() {
   
   // Additional fields state
   const [additionalFields, setAdditionalFields] = useState([]);
+
+  // Load saved data when app starts
+  useEffect(() => {
+    loadSavedData();
+  }, []);
+
+  // Save data whenever form changes
+  useEffect(() => {
+    saveContactData();
+  }, [name, phones, additionalFields, qrTitle, qrSubtitle]);
+
+  const saveContactData = async () => {
+    try {
+      const contactData = {
+        name,
+        phones,
+        additionalFields,
+        qrTitle,
+        qrSubtitle
+      };
+      await AsyncStorage.setItem(STORAGE_KEYS.CONTACT_DATA, JSON.stringify(contactData));
+    } catch (error) {
+      console.error('Error saving contact data:', error);
+    }
+  };
+
+  const loadSavedData = async () => {
+    try {
+      const savedData = await AsyncStorage.getItem(STORAGE_KEYS.CONTACT_DATA);
+      if (savedData) {
+        const contactData = JSON.parse(savedData);
+        setName(contactData.name || '');
+        setPhones(contactData.phones || [{ number: '', label: 'Mobile' }]);
+        setAdditionalFields(contactData.additionalFields || []);
+        setQrTitle(contactData.qrTitle || 'Your QR Code');
+        setQrSubtitle(contactData.qrSubtitle || 'Scan to add contact');
+      }
+    } catch (error) {
+      console.error('Error loading saved data:', error);
+    }
+  };
+
+  const clearSavedData = async () => {
+    Alert.alert(
+      'Clear Saved Data',
+      'Are you sure you want to clear all saved contact information? This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem(STORAGE_KEYS.CONTACT_DATA);
+              setName('');
+              setPhones([{ number: '', label: 'Mobile' }]);
+              setAdditionalFields([]);
+              setQrTitle('Your QR Code');
+              setQrSubtitle('Scan to add contact');
+              setShowQR(false);
+            } catch (error) {
+              console.error('Error clearing saved data:', error);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const addPhone = () => {
     setPhones([...phones, { number: '', label: 'Mobile' }]);
@@ -221,6 +299,14 @@ export default function App() {
           >
             <Text style={styles.editButtonText}>Edit QR</Text>
           </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.editButton, styles.clearButton]}
+            onPress={clearSavedData}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.editButtonText}>Clear Saved Data</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -346,6 +432,34 @@ export default function App() {
               onChangeText={setQrSubtitle}
               placeholderTextColor="#9E9E9E"
             />
+          </View>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Settings</Text>
+          <Text style={styles.sectionSubtitle}>Manage your saved contact data</Text>
+          
+          <View style={styles.settingsContainer}>
+            <View style={styles.settingItem}>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingTitle}>Data Persistence</Text>
+                <Text style={styles.settingDescription}>
+                  Your contact information is automatically saved and will persist across app restarts
+                </Text>
+                <View style={styles.statusIndicator}>
+                  <View style={styles.statusDot} />
+                  <Text style={styles.statusText}>Auto-save enabled</Text>
+                </View>
+              </View>
+            </View>
+            
+            <TouchableOpacity
+              style={styles.clearDataButton}
+              onPress={clearSavedData}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.clearDataButtonText}>Clear All Saved Data</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -661,6 +775,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     paddingHorizontal: 16,
     marginTop: 16,
+    gap: 12,
   },
   editButton: {
     backgroundColor: '#F5F5F5',
@@ -676,6 +791,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#757575',
+  },
+  clearButton: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    alignSelf: 'center',
   },
   bottomSpacing: {
     height: 40,
@@ -756,5 +881,56 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#757575',
+  },
+  settingsContainer: {
+    marginTop: 24,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+  },
+  settingItem: {
+    marginBottom: 16,
+  },
+  settingInfo: {
+    marginBottom: 8,
+  },
+  settingTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#212121',
+  },
+  settingDescription: {
+    fontSize: 14,
+    color: '#757575',
+  },
+  statusIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  statusDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#4CAF50',
+  },
+  statusText: {
+    fontSize: 14,
+    color: '#757575',
+  },
+  clearDataButton: {
+    backgroundColor: '#FFEBEE',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FFCDD2',
+    alignSelf: 'center',
+  },
+  clearDataButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#D32F2F',
   },
 });
