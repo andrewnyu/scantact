@@ -63,6 +63,7 @@ export default function App() {
         setAdditionalFields(contactData.additionalFields || []);
         setQrTitle(contactData.qrTitle || 'Your QR Code');
         setQrSubtitle(contactData.qrSubtitle || 'Scan to add contact');
+        setShowQR(true);
       }
     } catch (error) {
       console.error('Error loading saved data:', error);
